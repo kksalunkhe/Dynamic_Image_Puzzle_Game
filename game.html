@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Puzzle Game</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: url('images/b6.jpg') no-repeat center center/cover;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: white;
+      position: relative;
+    }
+
+    body::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(0, 0, 0, 0.4);
+      z-index: 0;
+    }
+
+    header, #game-board, #controls, #top-controls, input, button {
+      position: relative;
+      z-index: 1;
+    }
+
+    header {
+      padding: 20px;
+      text-align: center;
+      background-color: rgba(0, 0, 0, 0.6);
+      width: 100%;
+    }
+
+    #top-controls {
+      margin-top: 20px;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 10px;
+      border-radius: 10px;
+      width: 340px;
+      text-align: center;
+    }
+
+    #upload, #start-btn, #reset-btn, .difficulty-btn {
+      padding: 8px 16px;
+      margin: 5px;
+      border: none;
+      border-radius: 8px;
+      background-color: rgba(0, 0, 0, 0.5);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    #upload:hover, #start-btn:hover, #reset-btn:hover, .difficulty-btn:hover {
+      background-color: rgba(0, 0, 0, 0.7);
+    }
+
+    #difficulty-buttons {
+      margin-top: 10px;
+    }
+
+    #game-board {
+      display: grid;
+      margin-top: 20px;
+      width: 300px;
+      height: 300px;
+      gap: 2px;
+    }
+
+    .tile {
+      background-size: 300px 300px;
+      border: 1px solid white;
+      cursor: move;
+    }
+
+    #controls {
+      margin-top: 20px;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 10px;
+      border-radius: 10px;
+      width: 320px;
+      text-align: center;
+    }
+
+    #moves {
+      margin-top: 10px;
+      font-size: 1.2rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🧩 Play the Puzzle</h1>
+  </header>
+
+  <!-- Top Controls Section -->
+  <div id="top-controls">
+    <input type="file" id="upload" accept="image/*" />
+    <button id="start-btn">Start Game</button>
+    <button id="reset-btn">Reset</button>
+    <div id="difficulty-buttons">
+      <button class="difficulty-btn" data-size="3">3x3</button>
+      <button class="difficulty-btn" data-size="4">4x4</button>
+      <button class="difficulty-btn" data-size="5">5x5</button>
+    </div>
+  </div>
+
+  <div id="game-board"></div>
+
+  <!-- Timer and Moves Section -->
+  <div id="controls">
+    <div id="timer">⏱️ Time: 0s</div>
+    <div id="moves">🧮 Moves: 0</div>
+  </div>
+
+  <audio id="drop-sound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_90b1c2f758.mp3?filename=click-124467.mp3"></audio>
+
+  <script>
+    const gameBoard = document.getElementById('game-board');
+    const startBtn = document.getElementById('start-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const upload = document.getElementById('upload');
+    const movesDisplay = document.getElementById('moves');
+    const timerDisplay = document.getElementById('timer');
+    const dropSound = document.getElementById('drop-sound');
+
+    let moves = 0;
+    let tiles = [];
+    let size = 3;
+    let imageURL = 'https://picsum.photos/300';
+    let timerInterval;
+    let seconds = 0;
+
+    function createTiles(imgURL) {
+      gameBoard.innerHTML = '';
+      moves = 0;
+      seconds = 0;
+      clearInterval(timerInterval);
+      timerDisplay.innerText = '⏱️ Time: 0s';
+      movesDisplay.innerText = '🧮 Moves: 0';
+
+      timerInterval = setInterval(() => {
+        seconds++;
+        timerDisplay.innerText = `⏱️ Time: ${seconds}s`;
+      }, 1000);
+
+      gameBoard.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+      gameBoard.style.gridTemplateRows = `repeat(${size}, 1fr)`;
+      tiles = [];
+
+      for (let i = 0; i < size * size; i++) {
+        const tile = document.createElement('div');
+        tile.className = 'tile';
+        tile.style.backgroundImage = `url('${imgURL}')`;
+        const x = i % size;
+        const y = Math.floor(i / size);
+        tile.style.backgroundPosition = `-${x * (300 / size)}px -${y * (300 / size)}px`;
+        tile.dataset.correct = i;
+        tile.dataset.index = i;
+        tile.setAttribute('draggable', true);
+        tile.addEventListener('dragstart', dragStart);
+        tile.addEventListener('dragover', dragOver);
+        tile.addEventListener('drop', drop);
+        gameBoard.appendChild(tile);
+        tiles.push(tile);
+      }
+      shuffleTiles();
+    }
+
+    function shuffleTiles() {
+      for (let i = tiles.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        gameBoard.appendChild(tiles[j]);
+      }
+    }
+
+    let dragSrc = null;
+
+    function dragStart(e) {
+      dragSrc = this;
+    }
+
+    function dragOver(e) {
+      e.preventDefault();
+    }
+
+    function drop(e) {
+      if (this !== dragSrc) {
+        let temp = this.style.backgroundPosition;
+        let tempCorrect = this.dataset.correct;
+
+        this.style.backgroundPosition = dragSrc.style.backgroundPosition;
+        this.dataset.correct = dragSrc.dataset.correct;
+
+        dragSrc.style.backgroundPosition = temp;
+        dragSrc.dataset.correct = tempCorrect;
+
+        dropSound.play();
+        moves++;
+        movesDisplay.innerText = '🧮 Moves: ' + moves;
+
+        checkWin();
+      }
+    }
+
+    function checkWin() {
+      const current = [...gameBoard.children];
+      for (let i = 0; i < current.length; i++) {
+        if (parseInt(current[i].dataset.correct) !== i) return;
+      }
+      clearInterval(timerInterval);
+      setTimeout(() => {
+        alert(`🎉 Congratulations! You solved it in ${moves} moves and ${seconds} seconds!`);
+      }, 200);
+    }
+
+    startBtn.addEventListener('click', () => {
+      createTiles(imageURL);
+    });
+
+    resetBtn.addEventListener('click', () => {
+      createTiles(imageURL);
+    });
+
+    upload.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          imageURL = reader.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    document.querySelectorAll('.difficulty-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        size = parseInt(btn.dataset.size);
+        createTiles(imageURL);
+      });
+    });
+  </script>
+</body>
+</html>

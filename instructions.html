@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Instructions</title>
+  <style>
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  /* Puzzle-themed background image from local PC */
+  background: url('images/b4.jpg') no-repeat center center/cover;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: white;
+  position: relative;
+}
+    h1 {
+      font-size: 2.5rem;
+      text-shadow: 2px 2px 5px black;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+      max-width: 600px;
+      margin: 20px auto;
+      background-color: rgba(0, 0, 0, 0.6);
+      border-radius: 12px;
+      padding: 20px;
+    }
+    li {
+      margin: 10px 0;
+      font-size: 1.1rem;
+    }
+    .start-btn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #00cec9;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-size: 1.2rem;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .start-btn:hover {
+      background-color: #009688;
+    }
+  </style>
+</head>
+<body>
+  <h1>How to Play</h1>
+  <ul>
+    <li>🔹 Choose or upload an image.</li>
+    <li>🔹 The image will be split into tiles and shuffled.</li>
+    <li>🔹 Drag and drop tiles to rearrange them.</li>
+    <li>🔹 Match the original image to win.</li>
+    <li>🔹 Your moves are counted. Try to solve it in the fewest moves!</li>
+  </ul>
+  <a href="game.html" class="start-btn">Go to Game</a>
+</body>
+</html>
